@@ -1,6 +1,3 @@
-if (process.env.NODE_ENV !== 'production') {
-     require('dotenv').config()
-}
 
 const express = require('express');
 const app = express();
@@ -10,87 +7,39 @@ const passport=require('passport');
 const flash=require('express-flash');
 const session=require('express-session');
 const methodOverride=require('method-override');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;;
 
-const initializePassport=require('./passport-config');
+passport.use(new GoogleStrategy({
+    clientID: "692806867880-73s3obdnmg1uc5et4bv3jt50dbfuqscr.apps.googleusercontent.com",
+    clientSecret: "ZLrdxMmDXzSW6d2gmUpCRp74",
+    callbackURL: "http://localhost:4000/oauth"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
 
-initializePassport(
-    passport,
-    email=>users.find(user => user.email === email),
-    id => users.find(user => user.id === id)
-)
+// passport.serializeUser(function(user, done) {
+//     done(null, user);
+//   });
+  
+//   passport.deserializeUser(function(obj, done) {
+//     done(null, obj);
+//   });
 
-const users=[]
+  app.get('/', function(req, res){
+    res.render('Login success');
+  });
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
 
-
-app.set('view-engine','ejs')
-app.use(express.urlencoded({extended:false}));
-app.use(flash());
-app.use(session({
-    secret:process.env.SESSION_SECRET,
-    resave:false,
-    saveUninitialized:false,
-}));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(methodOverride('_method'));
-
-app.get('/',checkAuthenticated,(req,res)=>{
- res.render('index.ejs',{name:req.user.name})
-})
-
-app.get('/login', checkNotAuthenticated,(req,res)=>{
-    res.render('login.ejs')
-   })
-
-   app.post('/login',checkNotAuthenticated, passport.authenticate('local' , {
-        successRedirect :'/',
-        failureRedirect:'/login',
-        failureFlash:true
-   }))
-
-   app.get('/register',checkNotAuthenticated, (req,res)=>{
-    res.render('register.ejs')
-   })
-
-   app.post('/register',checkNotAuthenticated, async (req,res)=>{
-       try {
-           const hashedPassword= await bcrypt.hash(req.body.password ,10);
-           users.push({
-               id:Date.now().toString(),
-               name:req.body.name,
-               email:req.body.email,
-               password:hashedPassword,
-           })
-           res.redirect('/login')
-           
-       } catch (error) {
-           res.redirect('/register')
-       }
-       console.log(users);
-    
-   })
-
-
-   function checkAuthenticated(req,res,next){
-       if (req.isAuthenticated()) {
-           return next() 
-       }
-       res.redirect('/login')
-   }
-
-   function checkNotAuthenticated(req,res,next){
-    if (req.isAuthenticated()) {
-      return res.redirect('/')
-    }
-    return next() 
-}
-
-
-app.delete('/logout',(req,res)=>{
-    req.logOut()
-    res.redirect('./login')
-   })
-
+app.get('/oauth', 
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
 
 
 
