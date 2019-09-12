@@ -30,7 +30,7 @@ app.use(session({
 
 const authenticateUser = (accessToken, refreshToken, profile, done) => {
    
-    console.log("profile",profile);
+    //console.log("profile",profile);
     //console.log("cd",cb);
     if (profile == null) {
         return done(null, false, { message: 'No user with that email' })
@@ -51,11 +51,13 @@ passport.use(new OktaStrategy({
     clientSecret: "Ncq4LzAENpMAB8ecA1hYpJaZ0s_B4W9_O7BUCFYq",
 }, authenticateUser))
 passport.serializeUser(function(user, done){
-  done(null, user.id);
+    //console.log("serialize");
+  done(null, user);
 });
 
-passport.deserializeUser(function(id, done) {
-    done(null, id);
+passport.deserializeUser(function(user, done) {
+    //console.log("deserialize");
+    done(null, user);
 });
 
 
@@ -65,7 +67,8 @@ passport.deserializeUser(function(id, done) {
 
 
 app.get('/',checkAuthenticated,(req,res)=>{
-    res.send('Login success');
+    console.log("user",req.user.displayName);
+    res.send(` Hello ${req.user.displayName} ` );
 });
 app.get('/okta', passport.authenticate('okta', {} ));
 
@@ -79,9 +82,9 @@ passport.authenticate('okta', {
 
 
 function checkAuthenticated(req,res,next){
-    console.log('checkAuthenticated');
+    //console.log('checkAuthenticated');
     if (req.isAuthenticated()) {
-        console.log('authenticated');
+        //console.log('authenticated');
         return next();
     }
     res.redirect('/okta');
