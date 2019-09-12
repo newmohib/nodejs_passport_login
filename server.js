@@ -8,7 +8,7 @@ const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const GoogleStrategy = require('passport-google-oauth20');
-//const OktaStrategy = require('passport-okta-oauth')
+const OktaStrategy = require('passport-okta-oauth').Strategy
 
 //
 
@@ -25,29 +25,34 @@ app.use(passport.session());
 
 
 
-const authenticateUser = (accessToken, refreshToken, userinfo, cb,done) => {
+const authenticateUser = (accessToken, refreshToken, profile, done) => {
    
     //console.log("userinfo",userinfo);
     //console.log("cd",cb);
-    if (userinfo == null) {
+    if (profile == null) {
         return done(null, false, { message: 'No user with that email' })
     }else{
-        return done(null, userinfo)
+        return done(null, profile)
     }
 
 }
 
-passport.use(new GoogleStrategy({
-    clientID: "692806867880-73s3obdnmg1uc5et4bv3jt50dbfuqscr.apps.googleusercontent.com",
-    clientSecret: "ZLrdxMmDXzSW6d2gmUpCRp74",
-    callbackURL: "http://localhost:4000/oauth"
+passport.use(new OktaStrategy({
+    audience: "https://dev-411052.okta.com",
+    //idp: process.env.OKTA_IDP,
+    scope: ['openid', 'email', 'profile'],
+    response_type: 'code',
+    callbackURL: "http://localhost:4000/oauth",
+
+    clientID: "0oa1c2m8l27N5W8wE357",
+    clientSecret: "Ncq4LzAENpMAB8ecA1hYpJaZ0s_B4W9_O7BUCFYq",
 }, authenticateUser))
-passport.serializeUser(function (user, done) {
-    done(null, user);
+passport.serializeUser(function(user, done){
+  done(null, user.id);
 });
 
-passport.deserializeUser(function (obj, done) {
-    done(null, obj);
+passport.deserializeUser(function(id, done) {
+    done(null, id);
 });
 
 
@@ -56,19 +61,19 @@ passport.deserializeUser(function (obj, done) {
 
 
 
-
-
 app.get('/',(req,res)=>{
     res.send('Login success');
 });
-app.get('/google', passport.authenticate('google', { scope: ['profile'] }));
+app.get('/okta', passport.authenticate('okta', {
+    successRedirect: '/users',
+    failureRedirect: '/'
+  }));
 
 app.get('/oauth',
-    passport.authenticate('google', {
-        successRedirect: '/',
-        failureRedirect: '/login'
-
-    }),
+passport.authenticate('okta', {
+    successRedirect: '/users',
+    failureRedirect: '/'
+  }),
 
 );
 
@@ -79,7 +84,7 @@ function checkAuthenticated(req,res,next){
         console.log('authenticated');
         return next();
     }
-    res.redirect('/google');
+    res.redirect('/okta');
 }
 
 function checkNotAuthenticated(req,res,next){
