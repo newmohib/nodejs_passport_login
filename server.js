@@ -15,19 +15,22 @@ const OktaStrategy = require('passport-okta-oauth').Strategy
 
 app.set('view-engine', 'ejs');
 app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
-// app.use(session({
-//     secret:process.env.SESSION_SECRET,
-//     resave:false,
-//     saveUninitialized:false,
-// }));
+app.use(session({
+    secret: 'secrettexthere',
+    saveUninitialized: true,
+    resave: true,
+}));
+  
+  // Init passport authentication 
+  app.use(passport.initialize());
+  // persistent login sessions 
+  app.use(passport.session());
 
 
 
 const authenticateUser = (accessToken, refreshToken, profile, done) => {
    
-    //console.log("userinfo",userinfo);
+    console.log("profile",profile);
     //console.log("cd",cb);
     if (profile == null) {
         return done(null, false, { message: 'No user with that email' })
@@ -61,18 +64,18 @@ passport.deserializeUser(function(id, done) {
 
 
 
-app.get('/',(req,res)=>{
+app.get('/',checkAuthenticated,(req,res)=>{
     res.send('Login success');
 });
 app.get('/okta', passport.authenticate('okta', {
-    successRedirect: '/users',
-    failureRedirect: '/'
-  }));
+    successRedirect: '/',
+    failureRedirect: '/okta'
+  } ));
 
 app.get('/oauth',
 passport.authenticate('okta', {
-    successRedirect: '/users',
-    failureRedirect: '/'
+    successRedirect: '/',
+    failureRedirect: '/okta'
   }),
 
 );
