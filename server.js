@@ -38,14 +38,14 @@ app.use(session({
 
 
 
-const authenticateUser = (accessToken, refreshToken, userinfo, cb,done) => {
+const authenticateUser = (accessToken, refreshToken, userinfo, callback) => {
    
     //console.log("userinfo",userinfo);
     //console.log("cd",cb);
     if (userinfo == null) {
-        return done(null, false, { message: 'No user with that email' })
+        return callback(null, false, { message: 'No user with that email' })
     }else{
-        return done(null, userinfo)
+        return callback(null, userinfo)
     }
 
 }
@@ -55,24 +55,17 @@ passport.use(new GoogleStrategy({
     clientSecret: "ZLrdxMmDXzSW6d2gmUpCRp74",
     callbackURL: "http://localhost:4000/oauth"
 }, authenticateUser))
-passport.serializeUser(function (user, done) {
-    done(null, user);
+passport.serializeUser(function (userinfo, done) {
+    done(null, userinfo);
 });
 
-passport.deserializeUser(function (obj, done) {
-    done(null, obj);
+passport.deserializeUser(function (userinfo, done) {
+    done(null, userinfo);
 });
-
-
-//medle
-
-
-
-
-
 
 app.get('/',checkAuthenticated, (req,res)=>{
-    res.send('Login success');
+    console.log("user",req.user);
+    res.send(`Hello ${req.user.displayName}`);
 });
 app.get('/google', passport.authenticate('google', { scope: ['profile'] }));
 
