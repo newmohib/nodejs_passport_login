@@ -67,10 +67,7 @@ passport.deserializeUser(function(id, done) {
 app.get('/',checkAuthenticated,(req,res)=>{
     res.send('Login success');
 });
-app.get('/okta', passport.authenticate('okta', {
-    successRedirect: '/',
-    failureRedirect: '/okta'
-  } ));
+app.get('/okta', passport.authenticate('okta', {} ));
 
 app.get('/oauth',
 passport.authenticate('okta', {
