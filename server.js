@@ -15,13 +15,26 @@ const GoogleStrategy = require('passport-google-oauth20');
 
 app.set('view-engine', 'ejs');
 app.use(flash());
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 // app.use(session({
 //     secret:process.env.SESSION_SECRET,
 //     resave:false,
 //     saveUninitialized:false,
 // }));
+
+// required for passport session
+app.use(session({
+    secret: 'secrettexthere',
+    saveUninitialized: true,
+    resave: true,
+  }));
+  
+  // Init passport authentication 
+  app.use(passport.initialize());
+  // persistent login sessions 
+  app.use(passport.session());
+
 
 
 
@@ -58,7 +71,7 @@ passport.deserializeUser(function (obj, done) {
 
 
 
-app.get('/',(req,res)=>{
+app.get('/',checkAuthenticated, (req,res)=>{
     res.send('Login success');
 });
 app.get('/google', passport.authenticate('google', { scope: ['profile'] }));
@@ -74,7 +87,7 @@ app.get('/oauth',
 
 
 function checkAuthenticated(req,res,next){
-    console.log('checkAuthenticated');
+    console.log('checkAuthenticated', req.isAuthenticated());
     if (req.isAuthenticated()) {
         console.log('authenticated');
         return next();
