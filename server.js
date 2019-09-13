@@ -4,6 +4,7 @@ const passport = require('passport');
 const flash = require('express-flash');
 const session = require('express-session');
 const passportConfig = require('./passport-config')
+const { checkAuthenticated, checkNotAuthenticated } = require('./helper/middleware')
 
 
 app.set('view-engine', 'ejs');
@@ -13,45 +14,36 @@ app.use(session({
     saveUninitialized: true,
     resave: true,
 }));
-  // Init passport authentication 
-  app.use(passport.initialize());
-  // persistent login sessions 
-  app.use(passport.session());
-  passport.use(passportConfig)
+// Init passport authentication 
+app.use(passport.initialize());
+// persistent login sessions 
+app.use(passport.session());
+passport.use(passportConfig)
 
 
-
-
-app.get('/',checkAuthenticated,(req,res)=>{
-    console.log("user",req.user.displayName);
-    res.send(` Hello ${req.user.displayName} ` );
+app.get('/', (req, res) => {
+    res.render('index.ejs')
 });
-app.get('/okta', passport.authenticate('okta', {} ));
+
+app.get('/home', checkAuthenticated, (req, res) => {
+    console.log("user", req.user);
+    res.render('home.ejs', { name: req.user.displayName })
+});
+
+app.get('/login', passport.authenticate('okta', {}));
 
 app.get('/oauth',
-passport.authenticate('okta', {
-    successRedirect: '/',
-    failureRedirect: '/okta'
-  }),
+    passport.authenticate('okta', {
+        successRedirect: '/home',
+        failureRedirect: '/'
+    }),
 
 );
 
-
-
-function checkAuthenticated(req,res,next){
-    if (req.isAuthenticated()) {
-        return next();
-    }
-    res.redirect('/okta');
-}
-function checkNotAuthenticated(req,res,next){
- if (req.isAuthenticated()) {
-   return res.redirect('/google')
- }
- return next() 
-}
-
-
+app.get('/logout', (req, res) => {
+    req.logOut()
+    res.redirect('/')
+})
 
 
 
