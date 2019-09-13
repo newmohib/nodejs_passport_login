@@ -9,8 +9,8 @@ const session = require('express-session');
 const methodOverride = require('method-override');
 const GoogleStrategy = require('passport-google-oauth20');
 const passportConfig = require('./passport-config')
+const { checkAuthenticated, checkNotAuthenticated } = require('./helper/middleware')
 
-//
 
 
 app.set('view-engine', 'ejs');
@@ -27,38 +27,32 @@ app.use(passport.initialize());
 app.use(passport.session());
 passport.use(passportConfig)
 
-app.get('/', checkAuthenticated, (req, res) => {
-    console.log("user", req.user);
-    res.send(`Hello ${req.user.displayName}`);
+
+app.get('/', (req, res) => {
+    res.render('index.ejs')
 });
-app.get('/google', passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/home', checkAuthenticated, (req, res) => {
+    console.log("user", req.user);
+    res.render('home.ejs', { name: req.user.displayName })
+});
+
+app.get('/login', passport.authenticate('google', { scope: ['profile'] }));
 
 app.get('/oauth',
     passport.authenticate('google', {
-        successRedirect: '/',
-        failureRedirect: '/login'
+        successRedirect: "/home",
+        failureRedirect: "/"
 
     }),
 
 );
 
-function checkAuthenticated(req, res, next) {
-    console.log('checkAuthenticated', req.isAuthenticated());
-    if (req.isAuthenticated()) {
-        console.log('authenticated');
-        return next();
-    }
-    res.redirect('/google');
-}
+app.get('/logout', (req, res) => {
+    req.logOut()
+    res.redirect("/")
+})
 
-function checkNotAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return res.redirect('/google')
-    }
-    return next()
-}
-
-//midle
 
 
 
