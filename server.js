@@ -8,63 +8,27 @@ const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const GoogleStrategy = require('passport-google-oauth20');
-//const OktaStrategy = require('passport-okta-oauth')
+const passportConfig = require('./passport-config')
 
 //
 
 
 app.set('view-engine', 'ejs');
 app.use(flash());
-// app.use(passport.initialize());
-// app.use(passport.session());
-// app.use(session({
-//     secret:process.env.SESSION_SECRET,
-//     resave:false,
-//     saveUninitialized:false,
-// }));
-
 // required for passport session
 app.use(session({
     secret: 'secrettexthere',
     saveUninitialized: true,
     resave: true,
-  }));
-  
-  // Init passport authentication 
-  app.use(passport.initialize());
-  // persistent login sessions 
-  app.use(passport.session());
+}));
+// Init passport authentication 
+app.use(passport.initialize());
+// persistent login sessions 
+app.use(passport.session());
+passport.use(passportConfig)
 
-
-
-
-const authenticateUser = (accessToken, refreshToken, userinfo, callback) => {
-   
-    //console.log("userinfo",userinfo);
-    //console.log("cd",cb);
-    if (userinfo == null) {
-        return callback(null, false, { message: 'No user with that email' })
-    }else{
-        return callback(null, userinfo)
-    }
-
-}
-
-passport.use(new GoogleStrategy({
-    clientID: "692806867880-73s3obdnmg1uc5et4bv3jt50dbfuqscr.apps.googleusercontent.com",
-    clientSecret: "ZLrdxMmDXzSW6d2gmUpCRp74",
-    callbackURL: "http://localhost:4000/oauth"
-}, authenticateUser))
-passport.serializeUser(function (userinfo, done) {
-    done(null, userinfo);
-});
-
-passport.deserializeUser(function (userinfo, done) {
-    done(null, userinfo);
-});
-
-app.get('/',checkAuthenticated, (req,res)=>{
-    console.log("user",req.user);
+app.get('/', checkAuthenticated, (req, res) => {
+    console.log("user", req.user);
     res.send(`Hello ${req.user.displayName}`);
 });
 app.get('/google', passport.authenticate('google', { scope: ['profile'] }));
@@ -78,8 +42,7 @@ app.get('/oauth',
 
 );
 
-
-function checkAuthenticated(req,res,next){
+function checkAuthenticated(req, res, next) {
     console.log('checkAuthenticated', req.isAuthenticated());
     if (req.isAuthenticated()) {
         console.log('authenticated');
@@ -88,11 +51,11 @@ function checkAuthenticated(req,res,next){
     res.redirect('/google');
 }
 
-function checkNotAuthenticated(req,res,next){
- if (req.isAuthenticated()) {
-   return res.redirect('/google')
- }
- return next() 
+function checkNotAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return res.redirect('/google')
+    }
+    return next()
 }
 
 //midle
