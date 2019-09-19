@@ -1,9 +1,9 @@
 
 
    const checkAuthenticated=(req, res, next) =>{
-        console.log('checkAuthenticated', req.isAuthenticated());
+        //console.log('checkAuthenticated', req.isAuthenticated());
         if (req.isAuthenticated()) {
-            console.log('authenticated');
+           // console.log('authenticated');
             return next();
         }
         res.redirect("/login");

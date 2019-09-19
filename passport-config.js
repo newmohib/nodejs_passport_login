@@ -6,10 +6,11 @@ const GoogleStrategy = require('passport-google-oauth20');
 
 
   const authenticateUser = (accessToken, refreshToken, userinfo, callback) => {
+    //console.log("userinf", userinfo);
     if (userinfo == null) {
         return callback(null, false, { message: 'No user with that email' })
     }else{
-        return callback(null, userinfo)
+        return callback(null, userinfo )
     }
 
 }
@@ -19,12 +20,15 @@ const GoogleStrategy = require('passport-google-oauth20');
     callbackURL: "http://localhost:4000/oauth"
 }, authenticateUser)
 
-passport.serializeUser(function (userinfo, done) {
-    done(null, userinfo);
+passport.serializeUser(function (user, done) {
+  console.log("serializeUser", user);
+    done(null, user);
 });
 
-passport.deserializeUser(function (userinfo, done) {
-    done(null, userinfo);
+passport.deserializeUser(function (user, done) {
+  console.log("deserializeUser", user);
+
+    done(null, user);
 });
 
 

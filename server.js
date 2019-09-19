@@ -1,6 +1,6 @@
-
 const express = require('express');
 const app = express();
+var cors = require('cors')
 const port = 4000;
 const bcrypt = require('bcrypt');
 const passport = require('passport');
@@ -15,6 +15,7 @@ const { checkAuthenticated, checkNotAuthenticated } = require('./helper/middlewa
 
 app.set('view-engine', 'ejs');
 app.use(flash());
+app.use(cors())
 // required for passport session
 app.use(session({
     secret: 'secrettexthere',
@@ -41,12 +42,16 @@ app.get('/login', passport.authenticate('google', { scope: ['profile'] }));
 
 app.get('/oauth',
     passport.authenticate('google', {
-        successRedirect: "/home",
+        successRedirect: "http://localhost:3000",
         failureRedirect: "/"
 
     }),
 
 );
+
+app.get('/login/success', (req, res) => {
+    res.send({status:200})
+});
 
 app.get('/logout', (req, res) => {
     req.logOut()
